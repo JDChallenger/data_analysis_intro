@@ -155,3 +155,40 @@ ggplot(df2) + geom_point(aes(x = day, y = y)) + theme_classic() +
 ggplot(df) + geom_point(aes(x = day, y = y, color = District)) + theme_classic() + 
   geom_line(data = new_dat3, aes(x = day, y = pred), color = 'magenta')
 
+
+##################################################################################
+# We can also fit a model using the negative binomial distribution
+
+# here is a model in terms of day
+nb_model <- gam(y ~ s(day, k = 10), data = df2, family = nb(), method="REML")
+
+# View model summary
+summary(nb_model)
+
+# Extract the estimated theta value (this is the dispersion parameter)
+nb_model$family$getTheta()
+
+#And here's a model where we incorporate seasonality
+nb_model2 <- gam(y ~ factor(year) + s(day_of_year, k = 7, bs = 'cc'), data = df2, 
+              family = nb(), knots = list(day_of_year = c(0,365)), method = "REML")
+summary(nb_model2)
+
+#now let's predict
+new_dat_nb2 <- data.frame('day' = seq(99,1025))
+new_dat_nb2$day_of_year <- new_dat_nb2$day %% 365
+
+new_dat_nb2$year <- 2021
+new_dat_nb2[new_dat_nb2$day > 365 & new_dat_nb2$day <= 730 ,]$year <- 2022
+new_dat_nb2[new_dat_nb2$day > 730,]$year <- 2023
+new_dat_nb2$year <- as.factor(new_dat_nb2$year)
+
+yy_nb2 <- predict(nb_model2, newdata = new_dat_nb2, type = 'response')
+
+
+new_dat_nb2$pred <- yy_nb2
+
+# Now plot: 
+# Now we see the model expects different magnitudes of mosquito population
+# each year.
+ggplot(df2) + geom_point(aes(x = day, y = y)) + theme_classic() + 
+  geom_line(data = new_dat_nb2, aes(x = day, y = pred), color = 'magenta')
