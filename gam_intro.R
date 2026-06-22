@@ -188,7 +188,7 @@ yy_nb2 <- predict(nb_model2, newdata = new_dat_nb2, type = 'response')
 new_dat_nb2$pred <- yy_nb2
 
 # Now plot: 
-# Now we see the model expects different magnitudes of mosquito population
+# Now, we see the model expects different magnitudes of mosquito population
 # each year.
 ggplot(df2) + geom_point(aes(x = day, y = y)) + theme_classic() + 
   geom_line(data = new_dat_nb2, aes(x = day, y = pred), color = 'magenta')
